@@ -15,6 +15,7 @@
       color: #444;
       margin: 0;
     }
+
     .game-container {
       background: #fff;
       padding: 2rem;
@@ -25,36 +26,39 @@
       width: 90vw;
       text-align: center;
     }
+
     h1 {
       color: #ff6f61;
       font-size: 2rem;
       margin-bottom: 1rem;
     }
+
     .game-grid {
       display: grid;
       gap: 1rem;
       margin: 1.5rem 0;
-      transition: all 0.3s;
       justify-content: center;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     }
+
     .card {
       background: #ffb86c;
       aspect-ratio: 3 / 2;
-      min-height: 80px;
       border-radius: 1rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       cursor: pointer;
       position: relative;
       perspective: 600px;
       transition: box-shadow 0.2s, opacity 0.5s, transform 0.5s;
-      z-index: 1;
       display: flex;
       align-items: stretch;
     }
+
     .card.flipped .card-inner,
     .card.matched .card-inner {
       transform: rotateY(180deg);
     }
+
     .card-inner {
       position: relative;
       width: 100%;
@@ -63,6 +67,7 @@
       transform-style: preserve-3d;
       border-radius: 1rem;
     }
+
     .card-front, .card-back {
       position: absolute;
       width: 100%;
@@ -72,15 +77,16 @@
       justify-content: center;
       align-items: center;
       font-weight: bold;
-      font-size: 1.3rem;
       backface-visibility: hidden;
       user-select: none;
     }
+
     .card-front {
       background: #ffb86c;
       color: #fff;
       font-size: 2rem;
     }
+
     .card-back {
       background: #fff;
       color: #222;
@@ -88,12 +94,14 @@
       font-size: 1.1rem;
       padding: 0.5rem;
     }
+
     .card.matched {
       pointer-events: none;
       opacity: 0;
       transform: scale(0.3) rotate(20deg);
       transition: opacity 0.5s, transform 0.5s;
     }
+
     .status-message {
       min-height: 2rem;
       color: #ff6f61;
@@ -101,6 +109,7 @@
       font-weight: bold;
       margin-bottom: 1rem;
     }
+
     .reset-button {
       padding: 0.7rem 2rem;
       background: #6c5ce7;
@@ -114,8 +123,18 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.10);
       transition: background 0.2s;
     }
+
     .reset-button:hover {
       background: #5b48d8;
+    }
+
+    @media (max-width: 500px) {
+      .card-front {
+        font-size: 1.5rem;
+      }
+      .card-back {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
@@ -126,28 +145,19 @@
     <div id="status-message" class="status-message"></div>
     <button id="reset-button" class="reset-button">Reset Game</button>
   </div>
+
   <script>
     const surahPairs = [
-      { id: '1', value: 'Al-Fatiha' },
-      { id: '1', value: '1' },
-      { id: '2', value: 'Al-Baqarah' },
-      { id: '2', value: '2' },
-      { id: '3', value: 'Al-Imran' },
-      { id: '3', value: '3' },
-      { id: '4', value: 'An-Nisa' },
-      { id: '4', value: '4' },
-      { id: '5', value: 'Al-Ma\'idah' },
-      { id: '5', value: '5' },
-      { id: '6', value: 'Al-An\'am' },
-      { id: '6', value: '6' },
-      { id: '7', value: 'Al-A\'raf' },
-      { id: '7', value: '7' },
-      { id: '8', value: 'Al-Anfal' },
-      { id: '8', value: '8' },
-      { id: '9', value: 'At-Tawbah' },
-      { id: '9', value: '9' },
-      { id: '10', value: 'Yunus' },
-      { id: '10', value: '10' }
+      { id: '1', value: 'Al-Fatiha' }, { id: '1', value: '1' },
+      { id: '2', value: 'Al-Baqarah' }, { id: '2', value: '2' },
+      { id: '3', value: 'Al-Imran' }, { id: '3', value: '3' },
+      { id: '4', value: 'An-Nisa' }, { id: '4', value: '4' },
+      { id: '5', value: 'Al-Ma\'idah' }, { id: '5', value: '5' },
+      { id: '6', value: 'Al-An\'am' }, { id: '6', value: '6' },
+      { id: '7', value: 'Al-A\'raf' }, { id: '7', value: '7' },
+      { id: '8', value: 'Al-Anfal' }, { id: '8', value: '8' },
+      { id: '9', value: 'At-Tawbah' }, { id: '9', value: '9' },
+      { id: '10', value: 'Yunus' }, { id: '10', value: '10' }
     ];
 
     let firstCard = null;
@@ -158,15 +168,6 @@
     const grid = document.getElementById('game-grid');
     const statusMessage = document.getElementById('status-message');
     const resetButton = document.getElementById('reset-button');
-
-    function getIdealColumns(cardCount) {
-      return Math.max(2, Math.ceil(Math.sqrt(cardCount)));
-    }
-
-    function updateGridColumns() {
-      const cardCount = grid.querySelectorAll('.card').length;
-      grid.style.gridTemplateColumns = `repeat(${getIdealColumns(cardCount)}, minmax(110px, 1fr))`;
-    }
 
     function setupBoard() {
       grid.innerHTML = '';
@@ -202,7 +203,6 @@
         card.addEventListener('click', () => handleCardClick(card));
         grid.appendChild(card);
       });
-      updateGridColumns();
     }
 
     function handleCardClick(card) {
@@ -244,7 +244,6 @@
     }
 
     resetButton.addEventListener('click', setupBoard);
-    window.addEventListener('resize', updateGridColumns);
     setupBoard();
   </script>
 </body>
