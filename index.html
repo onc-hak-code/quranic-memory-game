@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quranic Memory Match</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f3f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: #444;
+      margin: 0;
+    }
+    .game-container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+      margin-top: 3rem;
+      max-width: 700px;
+      width: 90vw;
+      text-align: center;
+    }
+    h1 {
+      color: #ff6f61;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .game-grid {
+      display: grid;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      transition: all 0.3s;
+      justify-content: center;
+    }
+    .card {
+      background: #ffb86c;
+      aspect-ratio: 3 / 2;
+      min-height: 80px;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      cursor: pointer;
+      position: relative;
+      perspective: 600px;
+      transition: box-shadow 0.2s, opacity 0.5s, transform 0.5s;
+      z-index: 1;
+      display: flex;
+      align-items: stretch;
+    }
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+      border-radius: 1rem;
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.3rem;
+      backface-visibility: hidden;
+      user-select: none;
+    }
+    .card-front {
+      background: #ffb86c;
+      color: #fff;
+      font-size: 2rem;
+    }
+    .card-back {
+      background: #fff;
+      color: #222;
+      transform: rotateY(180deg);
+      font-size: 1.1rem;
+      padding: 0.5rem;
+    }
+    .card.matched {
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.3) rotate(20deg);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .status-message {
+      min-height: 2rem;
+      color: #ff6f61;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    .reset-button {
+      padding: 0.7rem 2rem;
+      background: #6c5ce7;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+      transition: background 0.2s;
+    }
+    .reset-button:hover {
+      background: #5b48d8;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Quranic Memory Match</h1>
+    <div id="game-grid" class="game-grid"></div>
+    <div id="status-message" class="status-message"></div>
+    <button id="reset-button" class="reset-button">Reset Game</button>
+  </div>
+  <script>
+    const surahPairs = [
+      { id: '1', value: 'Al-Fatiha' },
+      { id: '1', value: '1' },
+      { id: '2', value: 'Al-Baqarah' },
+      { id: '2', value: '2' },
+      { id: '3', value: 'Al-Imran' },
+      { id: '3', value: '3' },
+      { id: '4', value: 'An-Nisa' },
+      { id: '4', value: '4' },
+      { id: '5', value: 'Al-Ma\'idah' },
+      { id: '5', value: '5' },
+      { id: '6', value: 'Al-An\'am' },
+      { id: '6', value: '6' },
+      { id: '7', value: 'Al-A\'raf' },
+      { id: '7', value: '7' },
+      { id: '8', value: 'Al-Anfal' },
+      { id: '8', value: '8' },
+      { id: '9', value: 'At-Tawbah' },
+      { id: '9', value: '9' },
+      { id: '10', value: 'Yunus' },
+      { id: '10', value: '10' }
+    ];
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matchedPairs = 0;
+    const totalPairs = surahPairs.length / 2;
+    const grid = document.getElementById('game-grid');
+    const statusMessage = document.getElementById('status-message');
+    const resetButton = document.getElementById('reset-button');
+
+    function getIdealColumns(cardCount) {
+      return Math.max(2, Math.ceil(Math.sqrt(cardCount)));
+    }
+
+    function updateGridColumns() {
+      const cardCount = grid.querySelectorAll('.card').length;
+      grid.style.gridTemplateColumns = `repeat(${getIdealColumns(cardCount)}, minmax(110px, 1fr))`;
+    }
+
+    function setupBoard() {
+      grid.innerHTML = '';
+      statusMessage.textContent = '';
+      matchedPairs = 0;
+      lockBoard = false;
+      firstCard = null;
+      secondCard = null;
+
+      let cards = [...surahPairs];
+      cards.sort(() => Math.random() - 0.5);
+
+      cards.forEach(cardData => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.matchId = cardData.id;
+
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card-inner';
+
+        const cardFront = document.createElement('div');
+        cardFront.className = 'card-front';
+        cardFront.textContent = '?';
+
+        const cardBack = document.createElement('div');
+        cardBack.className = 'card-back';
+        cardBack.textContent = cardData.value;
+
+        cardInner.appendChild(cardFront);
+        cardInner.appendChild(cardBack);
+        card.appendChild(cardInner);
+
+        card.addEventListener('click', () => handleCardClick(card));
+        grid.appendChild(card);
+      });
+      updateGridColumns();
+    }
+
+    function handleCardClick(card) {
+      if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+      card.classList.add('flipped');
+
+      if (!firstCard) {
+        firstCard = card;
+      } else {
+        if (firstCard === card) return;
+        secondCard = card;
+        lockBoard = true;
+
+        if (firstCard.dataset.matchId === secondCard.dataset.matchId) {
+          setTimeout(() => {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            matchedPairs++;
+            if (matchedPairs === totalPairs) {
+              statusMessage.textContent = "🎉 Congratulations! You matched all pairs!";
+            }
+            resetTurn();
+          }, 600);
+        } else {
+          setTimeout(() => {
+            firstCard.classList.remove('flipped');
+            secondCard.classList.remove('flipped');
+            resetTurn();
+          }, 1000);
+        }
+      }
+    }
+
+    function resetTurn() {
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+    }
+
+    resetButton.addEventListener('click', setupBoard);
+    window.addEventListener('resize', updateGridColumns);
+    setupBoard();
+  </script>
+</body>
+</html>
