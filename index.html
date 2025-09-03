@@ -137,6 +137,7 @@
       justify-content: center;
       align-items: center;
       z-index: 10;
+      cursor: default;
     }
     .modal-message {
       background: #fff;
@@ -148,6 +149,27 @@
       font-weight: bold;
       text-align: center;
     }
+    .modal-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .modal-btn {
+      padding: 0.7rem 2rem;
+      border: none;
+      border-radius: 999px;
+      background: #6c5ce7;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+      transition: background 0.2s;
+    }
+    .modal-btn:hover {
+      background: #5b48d8;
+    }
     @media (max-width: 500px) {
       .card-front {
         font-size: 1.5rem;
@@ -158,6 +180,10 @@
       .modal-message {
         font-size: 1.1rem;
         padding: 1.2rem 1.2rem;
+      }
+      .modal-btn {
+        font-size: 0.9rem;
+        padding: 0.7rem 1.2rem;
       }
     }
   </style>
@@ -179,7 +205,7 @@
   </div>
 
   <script>
-    // Surah pairs for level 1 (1-10)
+    // Surah pairs for levels
     const surahPairsLevel1 = [
       { id: '1', value: 'Al-Fatiha' }, { id: '1', value: '1' },
       { id: '2', value: 'Al-Baqarah' }, { id: '2', value: '2' },
@@ -192,7 +218,6 @@
       { id: '9', value: 'At-Tawbah' }, { id: '9', value: '9' },
       { id: '10', value: 'Yunus' }, { id: '10', value: '10' }
     ];
-    // Surah pairs for level 2 (11-20)
     const surahPairsLevel2 = [
       { id: '11', value: 'Hud' }, { id: '11', value: '11' },
       { id: '12', value: 'Yusuf' }, { id: '12', value: '12' },
@@ -205,7 +230,6 @@
       { id: '19', value: 'Maryam' }, { id: '19', value: '19' },
       { id: '20', value: 'Ta-Ha' }, { id: '20', value: '20' }
     ];
-    // Surah pairs for level 3 (21-30)
     const surahPairsLevel3 = [
       { id: '21', value: 'Al-Anbiya' }, { id: '21', value: '21' },
       { id: '22', value: 'Al-Hajj' }, { id: '22', value: '22' },
@@ -302,23 +326,7 @@
             secondCard.classList.add('matched');
             matchedPairs++;
             if (matchedPairs === totalPairs) {
-              if (level === 1) {
-                statusMessage.textContent = "🎉 Great job! You've completed Level 1! Moving to Level 2...";
-                setTimeout(() => {
-                  level = 2;
-                  setupBoard();
-                  statusMessage.textContent = "Level 2: Surahs 11-20. Good luck!";
-                }, 1800);
-              } else if (level === 2) {
-                statusMessage.textContent = "🎉 Great job! You've completed Level 2! Moving to Level 3...";
-                setTimeout(() => {
-                  level = 3;
-                  setupBoard();
-                  statusMessage.textContent = "Level 3: Surahs 21-30. Good luck!";
-                }, 1800);
-              } else {
-                showModal("🏆 Congratulations! You've completed all levels!");
-              }
+              showWinModal(level);
             }
             resetTurn();
           }, 600);
@@ -338,21 +346,63 @@
       lockBoard = false;
     }
 
-    function showModal(message) {
-      modalMessage.textContent = message;
+    function showWinModal(currentLevel) {
+      let html = "";
+      if (currentLevel === 1) {
+        html = `
+          🎉 Great job! You've completed Level 1!
+          <div class="modal-buttons">
+            <button class="modal-btn" id="replay-btn">Replay Level 1</button>
+            <button class="modal-btn" id="next-btn">Go to Level 2</button>
+          </div>
+        `;
+      } else if (currentLevel === 2) {
+        html = `
+          🎉 Great job! You've completed Level 2!
+          <div class="modal-buttons">
+            <button class="modal-btn" id="replay-btn">Replay Level 2</button>
+            <button class="modal-btn" id="next-btn">Go to Level 3</button>
+          </div>
+        `;
+      } else {
+        html = `🏆 Congratulations! You've completed all levels!`;
+      }
+      modalMessage.innerHTML = html;
       modalOverlay.style.display = "flex";
+      // Modal button logic
+      setTimeout(() => { // Wait for DOM insert
+        const replayBtn = document.getElementById('replay-btn');
+        const nextBtn = document.getElementById('next-btn');
+        if (replayBtn) {
+          replayBtn.onclick = function(e) {
+            hideModal();
+            setupBoard();
+          }
+        }
+        if (nextBtn) {
+          nextBtn.onclick = function(e) {
+            hideModal();
+            level = Math.min(level + 1, 3);
+            setupBoard();
+          }
+        }
+      }, 50);
     }
 
     function hideModal() {
       modalOverlay.style.display = "none";
-      modalMessage.textContent = "";
+      modalMessage.innerHTML = "";
     }
 
-    // Allow modal overlay click to hide it
-    modalOverlay.addEventListener('click', hideModal);
+    // Modal overlay click: only dismiss final win message
+    modalOverlay.addEventListener('click', function(e) {
+      if (level === 3) {
+        hideModal();
+      }
+    });
 
+    // FIXED: Reset game at current level only
     resetButton.addEventListener('click', () => {
-      level = 1;
       setupBoard();
     });
 
